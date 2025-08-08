@@ -1,0 +1,8 @@
+{
+	"name": "fun.moonymachine.scrutable-objects",
+	"version": "1.0.0",
+	"displayName": "Scrutable Objects",
+	"description": "Enables direct access to the properties of ScriptableObject references in the editor.",
+	"author": { "name": "Moony Machine" },
+	"license": "MIT"
+}

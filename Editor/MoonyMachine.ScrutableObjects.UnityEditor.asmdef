@@ -1,0 +1,12 @@
+{
+    "name": "MoonyMachine.ScrutableObjects.UnityEditor",
+    "references": [
+        "MoonyMachine.ScrutableObjects"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "overrideReferences": true,
+    "autoReferenced": true
+}
