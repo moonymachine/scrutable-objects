@@ -46,7 +46,7 @@ public class ExampleMonoBehaviour : MonoBehaviour
 }
 ```
 
-Note that this does not prevent all ways changing the object reference at runtime, so write your code defensively.
+Note that this does not prevent all ways of changing the object reference at runtime, so write your code defensively.
 
 #### Lists and Arrays
 
@@ -68,14 +68,14 @@ public class ExampleMonoBehaviour : MonoBehaviour
 
 #### Apply to Types
 
-To apply to specific types of ScriptableObject, derive a new property drawer from `ScrutableObjectDrawer` for the type.
+To automatically apply to specific types of ScriptableObject, derive a new property drawer from `ScrutableObjectDrawer` for that type.
 
 ```csharp
 using ScrutableObjects.UnityEditor;
 using UnityEditor;
 using UnityEngine;
 
-[CustomPropertyDrawer(typeof(ExampleAsset))]
+[CustomPropertyDrawer(typeof(ExampleAsset), true)]
 public class ExampleAssetDrawer : ScrutableObjectDrawer
 {
 	public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
