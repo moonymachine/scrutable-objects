@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -7,6 +6,10 @@ namespace ScrutableObjects.UnityEditor
 {
 	public abstract class ScrutableObjectDrawer : PropertyDrawer
 	{
+		// 15.0f is the indent width that Unity has always used, but the value is not public.
+		// If this changes in the future, platform dependent compilation can be added.
+		private const float IndentWidth = 15.0f;
+
 		// This is required for the object field to render with a blank space for the label.
 		// The foldout renders the label so that it appears properly even outside of the inspector window.
 		// Otherwise, the label and foldout arrow overlap. Manual indentation behavior is inconsistent.
@@ -41,7 +44,7 @@ namespace ScrutableObjects.UnityEditor
 			}
 		}
 
-		private static ScriptableObject GetScriptableObjectReference(SerializedProperty property)
+		protected static ScriptableObject GetScriptableObjectReference(SerializedProperty property)
 		{
 			ScriptableObject scriptableObject = null;
 			if(property.propertyType == SerializedPropertyType.ObjectReference && !property.hasMultipleDifferentValues)
@@ -118,10 +121,6 @@ namespace ScrutableObjects.UnityEditor
 							}
 						}
 					}
-					catch(Exception exception)
-					{
-						Debug.LogException(exception);
-					}
 					finally
 					{
 						PopObject();
@@ -153,7 +152,7 @@ namespace ScrutableObjects.UnityEditor
 				}
 				UpdateSerializedScriptableObject(property);
 				// Foldout
-				TruncateLabel(label);
+				label = GetTruncatedLabel(label);
 				EditorGUI.BeginProperty(position, label, property);
 				bool isExpanded = property.isExpanded;
 				bool altKeyToggle = false;
@@ -171,11 +170,12 @@ namespace ScrutableObjects.UnityEditor
 					{
 						if(isExpanded)
 						{
+							// Avoid Inifinite Recursion
+							position.x += IndentWidth;
+							position.width -= IndentWidth;
 							position.y += position.height + EditorGUIUtility.standardVerticalSpacing;
 							position.height = EditorGUIUtility.singleLineHeight;
-							++EditorGUI.indentLevel;
 							EditorGUI.LabelField(position, "∞", "∞");
-							--EditorGUI.indentLevel;
 						}
 					}
 					else
@@ -200,9 +200,8 @@ namespace ScrutableObjects.UnityEditor
 							if(isExpanded)
 							{
 								// Indent
-								++EditorGUI.indentLevel;
-								position = EditorGUI.IndentedRect(position);
-								--EditorGUI.indentLevel;
+								position.x += IndentWidth;
+								position.width -= IndentWidth;
 								// Child Properties
 								SerializedProperty childProperty = SerializedScriptableObject.GetIterator();
 								childProperty.NextVisible(true);
@@ -216,11 +215,6 @@ namespace ScrutableObjects.UnityEditor
 								if(EditorGUI.EndChangeCheck())
 									SerializedScriptableObject.ApplyModifiedProperties();
 							}
-
-						}
-						catch(Exception exception)
-						{
-							Debug.LogException(exception);
 						}
 						finally
 						{
@@ -232,19 +226,24 @@ namespace ScrutableObjects.UnityEditor
 		}
 
 		// Using GUI.BeginClip to truncate the label doesn't always work properly on older versions of Unity.
-		private static void TruncateLabel(GUIContent label)
+		private static GUIContent GetTruncatedLabel(GUIContent label)
 		{
 			// Some versions of Unity need a little extra space under certain conditions.
-			float maxWidth = EditorGUIUtility.labelWidth - 10.0f;
+			float maxWidth = EditorGUIUtility.labelWidth - IndentWidth * EditorGUI.indentLevel;
 			GUIStyle style = EditorStyles.label;
 			string text = label.text;
 			float width = style.CalcSize(label).x;
-			while(width > maxWidth && text.Length > 0)
+			if(width > maxWidth && text.Length > 0)
 			{
-				text = text.Substring(0, text.Length - 1);
-				label.text = text;
-				width = style.CalcSize(label).x;
+				label = new GUIContent(label);
+				while(width > maxWidth && text.Length > 0)
+				{
+					text = text.Substring(0, text.Length - 1);
+					label.text = text;
+					width = style.CalcSize(label).x;
+				}
 			}
+			return label;
 		}
 
 		private static void ExpandOrCollapseAll(SerializedProperty property)
